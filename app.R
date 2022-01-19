@@ -14,9 +14,6 @@ library(ggradar)
 library(randomNames)
 library(glue)
 
-library(djprshiny)
-library(djprtheme)
-
 
 # setup db connection
 db_pool <- dbPool(
@@ -33,37 +30,39 @@ onStop(function() {
 
 
 methods <- tribble(~ capability,                  ~target,
-                   "Machine Learning",            0.50,
-                   "statistical modelling",       0.75,
-                   "Natural Language Processing", 0.3,
-                   "Text Mining",                 0.75,
-                   "Web scraping",                0.6,
+                   "Data Modelling",              0.75,
+                   "Econometrics / Time Series",  0.5,
+                   "Text Processing",             0.3,
                    "Package Development",         0.75,
                    "Shiny Applications",          0.75,
-                   "Time Series",                 0.5,
-                   "Experimental Design",         0.5,
-                   "Spatial Analysis",            0.5) %>%
+                   "Quasi Experimental Design",   0.5,
+                   "Out of Memory Analysis",      0.5,
+                   "Spatial Analysis",            0.5,
+                   "Economic Policy Analysis",    0.5,
+                   "Policy Data Demographics",    0.5,
+                   "Agility / Adaptability",      1  # calc value based on delta's of all the other values ??
+                   ) %>%
   mutate(type = 'methods')
 
 technology <- tribble(~ capability,   ~target,
-                     "gitlab",        1,
+                     "github",        1,
                      "ci/cd",         0.75,
-                     "docker",        0.5,
-                     "databricks",    0.5,
+                     #"docker",        0.5,
                      "postgresql",    0.5,
-                     "DRA",           0.75,
-                     "Windows VM",    0.3,
                      "Linux VM",      0.3,
                      "shiny server",  0.3,
-                     "shinyproxy",    0.5) %>%
+                     "RStudio",       1,
+                     "PowerBI",       0.5,
+                     "RMarkdown",     0.5,
+                     "Stata",         0.3) %>%
   mutate(type = 'technology')
 
 domain <- tribble(~ capability,            ~target,
-                  "econimics",          0.5,
-                  "environment",  0.3,
-                  "science",       0.3,
-                  "psychology",     1,
-                  "statistics",    0.5) %>%
+                  "economics",             0.5,
+                  "environment",           0.3,
+                  "science",               0.3,
+                  "psychology",            1,
+                  "statistics",            0.5) %>%
   mutate(type = 'domain')
 
 targets <- bind_rows(methods, technology, domain)
@@ -110,8 +109,6 @@ add_buttons <- function(button){
     radioGroupButtons(
         inputId = tolower(gsub(' ', '-', button)),
         label = tools::toTitleCase(button), 
-        # choices = c(`<i class='fa fa-stack-overflow'></i>` = 0, `<i class='fa fa-dice-one'></i>` = 1, 
-        #             `<i class='fa fa-dice-two'></i>` = 2),
         choices = 0:2,
         justified = TRUE
     )
@@ -127,8 +124,8 @@ inner_height <- selecter_height - 44
 
 # Define UI for application that draws a histogram
 ui <- function() {
-  djprshiny::djpr_page(
-    title = shiny::HTML("DJPR<BR>Data Analytics Capabilities"),
+  navbarPage(
+    title = shiny::HTML("Data Analytics Capabilities"),
     tabPanel(title = 'dashboard',
              tags$head(
                tags$style(paste0(".multi-wrapper {height: ", selecter_height, "px;}")),
