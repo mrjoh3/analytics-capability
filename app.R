@@ -78,9 +78,11 @@ team_data <- tbl(db_pool, 'capability_matrix') %>%
 # team_data <- expand.grid(user = randomNames::randomNames(10, which.names = 'first'),
 #                          timestamp = Sys.time(),
 #                          capability = targets$capability) %>%
-#   left_join(targets %>% select(type, capability)) 
+#   left_join(targets %>% select(type, capability))
 # 
 # team_data$value <- sample(0:2, nrow(team_data), replace = TRUE, prob = c(.25, .5, .25))
+# 
+# DBI::dbWriteTable(db_pool, 'capability_matrix', team_data, append = FALSE, row.names = FALSE)
 
 
 
@@ -90,13 +92,27 @@ summary_data <- team_data %>%
     group_by(type, capability) %>%
     summarise(score = sum(as.numeric(value))) %>%
     ungroup() %>%
-    mutate(score = score / scale_n) %>%
-    left_join(targets) 
+    left_join(targets) %>%
+    mutate(score = score / scale_n,
+           gap = ifelse(score - target > 0, 'No','Yes')) 
+
+
+plot_gaps <- function(df){
+  ggplot(df, aes(x = capability, y = target)) +
+    geom_crossbar(aes(ymin = score, ymax = target, fill = gap)) +
+    coord_flip() +
+    scale_fill_manual(values = c('Yes' = djprtheme::djpr_cobalt,
+                                 'No' = djprtheme::djpr_cool_grey_1)) +
+    xlab('') +
+    djprtheme::theme_djpr(base_size = 11, legend = 'right')
+}
+
+
 
 plot_data <- summary_data %>%
-    pivot_longer(cols = c('score', 'target'), names_to = 'value_type', values_to = 'score') %>%
-    split(f = as.factor(.$type)) %>%
-    map(~ pivot_wider(.x, names_from = 'capability', values_from = 'score'))
+    #pivot_longer(cols = c('score', 'target'), names_to = 'value_type', values_to = 'score') %>%
+    split(f = as.factor(.$type)) #%>%
+    #map(~ pivot_wider(.x, names_from = 'capability', values_from = 'score'))
 
 gap_data <- summary_data %>%
     mutate(gap = target - score) %>%
@@ -240,7 +256,7 @@ server <- function(input, output) {
         output[[paste0(p, '_plot')]] <- renderPlot({
             plot_data[[p]] %>%
                 select(-type) %>%
-                ggradar()
+                plot_gaps()
         })
     }, names(plot_data))
         
