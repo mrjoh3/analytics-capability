@@ -94,15 +94,17 @@ summary_data <- team_data %>%
     ungroup() %>%
     left_join(targets) %>%
     mutate(score = score / scale_n,
-           gap = ifelse(score - target > 0, 'No','Yes')) 
+           gap = ifelse(score - target > 0, 'OK','Gap')) 
 
 
 plot_gaps <- function(df){
   ggplot(df, aes(x = capability, y = target)) +
-    geom_crossbar(aes(ymin = score, ymax = target, fill = gap)) +
+    geom_crossbar(aes(ymin = score, ymax = target, fill = gap, colour = gap), width = 0.6) +
+    geom_errorbar(aes(ymin = target, ymax = target), colour = '#B90808', width = 0.8, size = 1.5) +
     coord_flip() +
-    scale_fill_manual(values = c('Yes' = djprtheme::djpr_cobalt,
-                                 'No' = djprtheme::djpr_cool_grey_1)) +
+    scale_discrete_manual(aesthetics = c('fill', 'colour'), 
+                          values = c('Gap' = djprtheme::djpr_cobalt,
+                                     'OK' = djprtheme::djpr_cool_grey_1)) +
     xlab('') +
     djprtheme::theme_djpr(base_size = 11, legend = 'right')
 }
